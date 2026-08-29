@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AM Verification Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 550px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #fff;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: #6c63ff;
+        }
+
+        .logo p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .step.active {
+            background: #6c63ff;
+            border-color: #6c63ff;
+            color: #fff;
+            box-shadow: 0 0 30px rgba(108, 99, 255, 0.3);
+        }
+
+        .step.done {
+            background: #2ecc71;
+            border-color: #2ecc71;
+            color: #fff;
+        }
+
+        .step-line {
+            flex: 1;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .step-line.done {
+            background: #2ecc71;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #6c63ff;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 20px rgba(108, 99, 255, 0.1);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #6c63ff, #5a52d5);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(108, 99, 255, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+
+        .btn.loading .loader {
+            display: block;
+        }
+
+        .btn.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .status-box {
+            margin-top: 20px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 60px;
+        }
+
+        .status-message {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .status-message.success {
+            color: #2ecc71;
+        }
+
+        .status-message.error {
+            color: #e74c3c;
+        }
+
+        .status-message .highlight {
+            color: #6c63ff;
+            font-weight: 600;
+        }
+
+        .result-box {
+            margin-top: 15px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: rgba(46, 204, 113, 0.05);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+        }
+
+        .result-box h4 {
+            color: #2ecc71;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .result-box pre {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 12px;
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.3);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: #6c63ff;
+        }
+
+        .step-section {
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(108, 99, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(108, 99, 255, 0.5);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="logo">
+            <h1>AM <span>Verification</span></h1>
+            <p>Magic Link Authentication Tool</p>
+        </div>
+
+        <div class="step-indicator">
+            <div class="step active" id="step1">1</div>
+            <div class="step-line" id="line1"></div>
+            <div class="step" id="step2">2</div>
+            <div class="step-line" id="line2"></div>
+            <div class="step" id="step3">3</div>
+        </div>
+
+        <!-- Step 1: Email -->
+        <div class="step-section" id="section1">
+            <div class="form-group">
+                <label>📧 Email Address</label>
+                <input type="email" id="emailInput" placeholder="Masukkan email Anda...">
+            </div>
+            <button class="btn" id="sendBtn">
+                <span class="btn-text">📤 Kirim Magic Link</span>
+                <span class="loader"></span>
+            </button>
+        </div>
+
+        <!-- Step 2: Magic Link -->
+        <div class="step-section hidden" id="section2">
+            <div class="form-group">
+                <label>🔗 Magic Link</label>
+                <input type="text" id="linkInput" placeholder="Paste magic link di sini...">
+                <small style="color: rgba(255,255,255,0.3); font-size: 12px; display: block; margin-top: 5px;">
+                    Copy seluruh link dari email Anda
+                </small>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" id="backBtn">
+                    ← Kembali
+                </button>
+                <button class="btn" id="verifyBtn">
+                    <span class="btn-text">✅ Verifikasi</span>
+                    <span class="loader"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Result -->
+        <div class="step-section hidden" id="section3">
+            <div class="status-box" style="border-color: rgba(46,204,113,0.3);">
+                <div class="status-message success" id="finalMessage">
+                    ✅ Verifikasi Berhasil!
+                </div>
+            </div>
+            <div class="result-box" id="resultBox">
+                <h4>📋 Data User</h4>
+                <pre id="resultData">Loading...</pre>
+            </div>
+            <button class="btn btn-secondary" id="resetBtn">
+                🔄 Mulai Ulang
+            </button>
+        </div>
+
+        <div class="status-box" id="statusBox">
+            <div class="status-message" id="statusMessage">💡 Masukkan email untuk memulai</div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by <a href="#" target="_blank">AM API</a> • v2.1</p>
+        </div>
+    </div>
+
+    <script>
+        // =============== CONFIGURATION ===============
+        const BASE_URL = 'https://am.yappi.my.id';
+        const COOKIE_API = `${BASE_URL}/api/cookie`;
+        const SEND_API = `${BASE_URL}/api/send`;
+        const VERIFY_API = `${BASE_URL}/api/verify`;
+
+        // =============== DOM REFS ===============
+        const emailInput = document.getElementById('emailInput');
+        const linkInput = document.getElementById('linkInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const backBtn = document.getElementById('backBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusMessage = document.getElementById('statusMessage');
+
+        const section1 = document.getElementById('section1');
+        const section2 = document.getElementById('section2');
+        const section3 = document.getElementById('section3');
+
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        const line1 = document.getElementById('line1');
+        const line2 = document.getElementById('line2');
+
+        const finalMessage = document.getElementById('finalMessage');
+        const resultData = document.getElementById('resultData');
+        const resultBox = document.getElementById('resultBox');
+
+        // =============== STATE ===============
+        let sessionCookie = null;
+        let currentEmail = null;
+        let isProcessing = false;
+
+        // =============== UTILITY FUNCTIONS ===============
+        function setStatus(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message';
+            if (type === 'success') statusMessage.classList.add('success');
+            if (type === 'error') statusMessage.classList.add('error');
+        }
+
+        function setLoading(btn, loading) {
+            if (loading) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        function showStep(step) {
+            section1.classList.add('hidden');
+            section2.classList.add('hidden');
+            section3.classList.add('hidden');
+
+            if (step === 1) section1.classList.remove('hidden');
+            else if (step === 2) section2.classList.remove('hidden');
+            else if (step === 3) section3.classList.remove('hidden');
+
+            // Update step indicators
+            [step1, step2, step3].forEach((el, i) => {
+                el.className = 'step';
+                if (i + 1 === step) el.classList.add('active');
+                else if (i + 1 < step) el.classList.add('done');
+            });
+
+            [line1, line2].forEach((el, i) => {
+                el.className = 'step-line';
+                if (i + 2 <= step) el.classList.add('done');
+            });
+        }
+
+        // =============== API FUNCTIONS ===============
+        async function apiRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36',
+                        ...options.headers
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || data.message || `HTTP ${response.status}`);
+                }
+
+                return data;
+            } catch (err) {
+                if (err.name === 'TypeError') {
+                    throw new Error('Koneksi gagal, periksa internet Anda');
+                }
+                throw err;
+            }
+        }
+
+        async function getSessionCookie() {
+            const data = await apiRequest(COOKIE_API, {
+                method: 'GET'
+            });
+
+            if (data.ok && data.cookie) {
+                return data.cookie;
+            }
+            throw new Error('Gagal mendapatkan session cookie');
+        }
+
+        async function sendVerificationLink(email, cookie) {
+            const data = await apiRequest(SEND_API, {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: email,
+                    cookie: cookie
+                })
+            });
+
+            if (!data.ok) {
+                throw new Error(data.error || 'Gagal mengirim link');
+            }
+            return true;
+        }
+
+        async function verifyMagicLink(email, link, cookie) {
+            const data = await apiRequest(VERIFY_API, {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: email,
+                    link: link,
+                    cookie: cookie
+                })
+            });
+
+            if (!data.ok) {
+                throw new Error(data.error || 'Verifikasi gagal');
+            }
+
+            return {
+                success: true,
+                userData: data.data?.user || null
+            };
+        }
+
+        // =============== EVENT HANDLERS ===============
+
+        // Send Magic Link
+        sendBtn.addEventListener('click', async () => {
+            if (isProcessing) return;
+
+            const email = emailInput.value.trim();
+            if (!email || !email.includes('@')) {
+                setStatus('❌ Masukkan email yang valid!', 'error');
+                return;
+            }
+
+            isProcessing = true;
+            setLoading(sendBtn, true);
+            setStatus('⏳ Mengambil session cookie...', 'info');
+
+            try {
+                sessionCookie = await getSessionCookie();
+                setStatus(`⏳ Mengirim link ke ${email}...`, 'info');
+
+                await sendVerificationLink(email, sessionCookie);
+                currentEmail = email;
+
+                setStatus(`✅ Link berhasil dikirim ke ${email}!`, 'success');
+
+                // Pindah ke step 2
+                setTimeout(() => {
+                    showStep(2);
+                    linkInput.value = '';
+                    linkInput.focus();
+                }, 1000);
+
+            } catch (err) {
+                setStatus(`❌ ${err.message}`, 'error');
+                sessionCookie = null;
+            } finally {
+                isProcessing = false;
+                setLoading(sendBtn, false);
+            }
+        });
+
+        // Verify Magic Link
+        verifyBtn.addEventListener('click', async () => {
+            if (isProcessing) return;
+
+            const link = linkInput.value.trim();
+            if (!link || link.length < 10) {
+                setStatus('❌ Paste magic link yang valid!', 'error');
+                return;
+            }
+
+            if (!sessionCookie) {
+                setStatus('❌ Session expired, ulangi dari awal', 'error');
+                showStep(1);
+                return;
+            }
+
+            isProcessing = true;
+            setLoading(verifyBtn, true);
+            setStatus('⏳ Memverifikasi link...', 'info');
+
+            try {
+                const result = await verifyMagicLink(currentEmail, link, sessionCookie);
+
+                setStatus('✅ VERIFIKASI BERHASIL!', 'success');
+                showStep(3);
+                finalMessage.textContent = '✅ Verifikasi Berhasil!';
+                resultData.textContent = JSON.stringify(result, null, 2);
+                resultBox.style.display = 'block';
+
+            } catch (err) {
+                setStatus(`❌ ${err.message}`, 'error');
+            } finally {
+                isProcessing = false;
+                setLoading(verifyBtn, false);
+            }
+        });
+
+        // Back button
+        backBtn.addEventListener('click', () => {
+            showStep(1);
+            setStatus('💡 Masukkan email untuk memulai', 'info');
+        });
+
+        // Reset button
+        resetBtn.addEventListener('click', () => {
+            showStep(1);
+            setStatus('💡 Masukkan email untuk memulai', 'info');
+            resultBox.style.display = 'none';
+            sessionCookie = null;
+            currentEmail = null;
+            emailInput.value = '';
+            linkInput.value = '';
+        });
+
+        // Enter key support
+        emailInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendBtn.click();
+        });
+
+        linkInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') verifyBtn.click();
+        });
+
+        // =============== INIT ===============
+        showStep(1);
+        setStatus('💡 Masukkan email untuk memulai', 'info');
+
+        console.log('%c🚀 AM Verification Tool v2.1', 'font-size:18px; font-weight:bold; color:#6c63ff;');
+        console.log('📌 Pastikan koneksi internet stabil');
+        console.log('🔗 Base URL:', BASE_URL);
+    </script>
+
+</body>
+  </html>
